@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using QuanLyBanHang.Data;
 using System.Runtime.CompilerServices;
 using System.Drawing.Printing;
+using ClosedXML.Excel;
 
 
 namespace QuanLyBanHang.Forms
@@ -33,7 +34,7 @@ namespace QuanLyBanHang.Forms
             List<DanhSachHoaDon> hd = new List<DanhSachHoaDon>();
             hd = context.HoaDon.Select(r => new DanhSachHoaDon
             {
-                ID = r.ID,
+                ID = (int)r.ID,
                 NhanVienID = r.NhanVienID,
                 HoVaTenNhanVien = r.NhanVien.HoVaTen,
                 KhachHangID = r.KhachHangID,
@@ -116,7 +117,7 @@ namespace QuanLyBanHang.Forms
 
         private void btnXuat_Click(object sender, EventArgs e)
         {
-            /*
+            
             using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel Workbook|*.xlsx" })
             {
                 if (sfd.ShowDialog() == DialogResult.OK)
@@ -140,7 +141,7 @@ namespace QuanLyBanHang.Forms
                     MessageBox.Show("Xuất Excel thành công!");
                 }    
             }
-            */
+            
         }
     }
 }

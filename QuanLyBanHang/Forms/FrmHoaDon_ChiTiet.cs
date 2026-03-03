@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing.Printing;
 
 namespace QuanLyBanHang.Forms
 {
@@ -16,6 +17,7 @@ namespace QuanLyBanHang.Forms
         QLBHDbContext context = new QLBHDbContext();    // Khởi tạo biến ngữ cảnh CSDL 
         int id;                                         // Lấy mã hóa đơn (dùng cho Sửa và Xóa) 
         BindingList<DanhSachHoaDon_ChiTiet> hoaDonChiTiet = new BindingList<DanhSachHoaDon_ChiTiet>();
+        PrintDocument printDocument = new PrintDocument();
 
         public FrmHoaDon_ChiTiet(int maHoaDon = 0)
         {
@@ -169,7 +171,7 @@ namespace QuanLyBanHang.Forms
                             HoaDon_ChiTiet ct = new HoaDon_ChiTiet();
                             ct.HoaDonID = id;
                             ct.SanPhamID = item.SanPhamID;
-                            ct.SoLuongBan = item.SoLuongBan;
+                            ct.SoLuongBan = Convert.ToInt16(item.SoLuongBan);
                             ct.DonGiaBan = item.DonGiaBan;
                             context.HoaDon_ChiTiet.Add(ct);
                         }
@@ -193,7 +195,7 @@ namespace QuanLyBanHang.Forms
                         HoaDon_ChiTiet ct = new HoaDon_ChiTiet();
                         ct.HoaDonID = hd.ID;
                         ct.SanPhamID = item.SanPhamID;
-                        ct.SoLuongBan = item.SoLuongBan;
+                        ct.SoLuongBan = Convert.ToInt16(item.SoLuongBan);
                         ct.DonGiaBan = item.DonGiaBan;
                         context.HoaDon_ChiTiet.Add(ct);
                     }
@@ -208,6 +210,68 @@ namespace QuanLyBanHang.Forms
             int maSanPham = Convert.ToInt32(cboSanPham.SelectedValue.ToString());
             var sanPham = context.SanPham.Find(maSanPham);
             numDonGiaBan.Value = sanPham.DonGia;
+        }
+
+        private void InHoaDon()
+        {
+            printDocument.PrintPage += PrintDocument_PrintPage;
+            PrintPreviewDialog preview = new PrintPreviewDialog();
+            preview.Document = printDocument;
+            preview.ShowDialog();
+        }
+
+        private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            float y = 20;
+            Font font = new Font("Arial", 12);
+            Font fontBold = new Font("Arial", 14, FontStyle.Bold);
+
+            // Tiêu đề
+            e.Graphics.DrawString("HÓA ĐƠN BÁN HÀNG", fontBold, Brushes.Black, 200, y);
+            y += 40;
+
+            // Thông tin chung
+            e.Graphics.DrawString("Nhân viên: " + cboNhanVien.Text, font, Brushes.Black, 20, y);
+            y += 25;
+            e.Graphics.DrawString("Khách hàng: " + cboKhachHang.Text, font, Brushes.Black, 20, y);
+            y += 25;
+            e.Graphics.DrawString("Ngày lập: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm"), font, Brushes.Black, 20, y);
+            y += 40;
+
+            // Header bảng
+            e.Graphics.DrawString("Sản phẩm", fontBold, Brushes.Black, 20, y);
+            e.Graphics.DrawString("SL", fontBold, Brushes.Black, 250, y);
+            e.Graphics.DrawString("Đơn giá", fontBold, Brushes.Black, 300, y);
+            e.Graphics.DrawString("Thành tiền", fontBold, Brushes.Black, 400, y);
+            y += 25;
+
+            int tongTien = 0;
+
+            foreach (var item in hoaDonChiTiet)
+            {
+                e.Graphics.DrawString(item.TenSanPham, font, Brushes.Black, 20, y);
+                e.Graphics.DrawString(item.SoLuongBan.ToString(), font, Brushes.Black, 250, y);
+                e.Graphics.DrawString(item.DonGiaBan.ToString("N0"), font, Brushes.Black, 300, y);
+                e.Graphics.DrawString(item.ThanhTien.ToString("N0"), font, Brushes.Black, 400, y);
+
+                tongTien += item.ThanhTien;
+                y += 25;
+            }
+
+            y += 20;
+            e.Graphics.DrawString("TỔNG TIỀN: " + tongTien.ToString("N0") + " VNĐ",
+                fontBold, Brushes.Black, 250, y);
+        }
+
+        private void btnInHoaDon_Click(object sender, EventArgs e)
+        {
+            if (hoaDonChiTiet.Count == 0)
+            {
+                MessageBox.Show("Không có sản phẩm để in.", "Thông báo");
+                return;
+            }
+
+            InHoaDon();
         }
     }
 }
